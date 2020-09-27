@@ -29,6 +29,10 @@ export class RecipeService {
                     new Ingredient("Salsa picante",1)
                  ])
     ];
+
+	 getRecipeById(index: number){
+		 return this.recipes[index];
+	 }
     
     getRecipe(){
        return this.recipes.slice();
