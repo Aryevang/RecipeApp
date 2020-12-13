@@ -1,13 +1,15 @@
-import { EventEmitter, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Ingredient } from '../shared/ingredient.model';
 import { ShoppingListService } from '../shopping-list/shopping-list.service';
 import { Recipe } from './recipe.model';
+import {Subject} from 'rxjs';
 
 @Injectable()
 export class RecipeService {
-   itemSelected = new EventEmitter<Recipe>();
-
    constructor(private slService: ShoppingListService){}
+	recipesChanged = new Subject<Recipe[]>();
+	//If the client don't add an image link, this will be the default image.
+	imageNotFound : string = "https://www.warwicklodgedental.co.uk/wp-content/themes/wlodge/images/no-image-found-360x250.png"
 
    private recipes: Recipe[] = [
       new Recipe("Bolas de carne","description No.1",
@@ -29,6 +31,10 @@ export class RecipeService {
                     new Ingredient("Salsa picante",1)
                  ])
     ];
+
+	 getRecipeById(index: number){
+		 return this.recipes[index];
+	 }
     
     getRecipe(){
        return this.recipes.slice();
@@ -37,4 +43,21 @@ export class RecipeService {
     addIngredientesToSL(ingredients: Ingredient[]){
       this.slService.addIngredients(ingredients);
     }
+
+	 addRecipe(recipe: Recipe){
+		if(recipe.imagePath==="")
+			recipe.imagePath = this.imageNotFound;
+		this.recipes.push(recipe);
+		this.recipesChanged.next(this.recipes.slice());
+	 }
+
+	 deleteReceipe(id: number){
+		 this.recipes.splice(id,1);
+		 this.recipesChanged.next(this.recipes.slice());
+	 }
+
+	 updateRecipe(index: number, recipe: Recipe){
+		this.recipes[index] = recipe;
+		this.recipesChanged.next(this.recipes.slice());
+	 }
 }
