@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import {FormBuilder, Validators, FormGroup} from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
+import { AuthService } from '../auth.service';
+import {Observable} from 'rxjs';
+import {AuthResponseData} from '../AuthResponseData';
 
 @Component({
   selector: 'app-auth',
@@ -7,7 +10,8 @@ import {FormBuilder, Validators, FormGroup} from '@angular/forms';
   styleUrls: ['./auth.component.css']
 })
 export class AuthComponent implements OnInit {
-  constructor(private frmGroup: FormBuilder) { }
+  constructor(private frmGroup: FormBuilder,
+				  private authService: AuthService) { }
   ngOnInit(): void {
   }
 
@@ -17,13 +21,40 @@ export class AuthComponent implements OnInit {
   })
 
   isLoginMode:boolean = true;
+  isLoading:boolean = false;
+  error:string = null;
 
   onSwitchMode(){
   	this.isLoginMode = !this.isLoginMode;
   }
 
   onSubmit(){
-	  console.log(this.authForm.value);
+	  if(!this.authForm.valid){
+		  return;
+	  }
+
+	  let authObserv: Observable<AuthResponseData>;
+
+	  this.isLoading = true;
+	  if(this.isLoginMode){
+		  authObserv = this.authService.login(this.authForm.value.email, this.authForm.value.password);
+	  }else{
+			  authObserv = this.authService.signUp(this.authForm.value.email, this.authForm.value.password);
+		  }
+
+		  authObserv.
+			  subscribe(
+				  response =>{
+					  console.log(response);
+					  this.isLoading = false;
+				  },
+				  errorMessage =>{
+					  //console.log('ERROR_MESSAGE',errorMessage);
+					  this.error = errorMessage;
+					  this.isLoading = false;
+				  }
+		  );
+
 	  this.authForm.reset();
   }
 
