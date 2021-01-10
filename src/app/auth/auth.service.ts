@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import { environment } from '../../environments/environment.prod';
-import {catchError} from 'rxjs/Operators';
-import { throwError } from 'rxjs';
+import {catchError, tap} from 'rxjs/Operators';
+import { throwError, Subject } from 'rxjs';
 import { AuthResponseData } from './AuthResponseData';
+import { User } from '../auth/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,13 +12,17 @@ import { AuthResponseData } from './AuthResponseData';
 export class AuthService {
   constructor(private http: HttpClient) { }
   signUpURL = environment.authSignUpURL;
+  user = new Subject<User>();
 
   login(email:string, password:string){
-  	return this.http.post<AuthResponseData>(environment.authLoginURL, {
+	  return this.http.post<AuthResponseData>(environment.authLoginURL, {
 		  email: email,
 		  password: password,
 		  returnSecureToken: true
-	  }).pipe(catchError(this.errorHandler));
+	  }).pipe(catchError(this.errorHandler),
+	  tap(resp => {
+		  this.AuthenticationHandler(resp.email,resp.elocalId,resp.idToken,+resp.expiresIn);
+	  }));
   }
 
   signUp(email: string, password: string){
@@ -25,7 +30,23 @@ export class AuthService {
 		  email: email,
 		  password: password,
 		  returnSecureToken: true
-	  }).pipe(catchError(this.errorHandler));
+	  }).pipe(catchError(this.errorHandler),
+	  tap(resp => {
+		  this.AuthenticationHandler(resp.email,resp.elocalId,resp.idToken,+resp.expiresIn);
+	  }));
+  }
+
+  private AuthenticationHandler(email: string, userId: string, token: string, expiresIn: number){
+  	const expiration = new Date(
+  		new Date().getTime() + (expiresIn * 1000)
+  	);
+	const user = new User(
+		email,
+		userId,
+		token,
+		expiration
+	);
+	this.user.next(user);
   }
 
   //Handle pipe logic needed to cath the errors
