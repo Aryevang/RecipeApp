@@ -2,17 +2,19 @@ import { Injectable } from '@angular/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import { environment } from '../../environments/environment.prod';
 import {catchError, tap} from 'rxjs/Operators';
-import { throwError, Subject } from 'rxjs';
+import { throwError, BehaviorSubject } from 'rxjs';
 import { AuthResponseData } from './AuthResponseData';
 import { User } from '../auth/user.model';
+import {Router} from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient,
+				  private router: Router) { }
   signUpURL = environment.authSignUpURL;
-  user = new Subject<User>();
+  user = new BehaviorSubject<User>(null);
 
   login(email:string, password:string){
 	  return this.http.post<AuthResponseData>(environment.authLoginURL, {
@@ -23,6 +25,11 @@ export class AuthService {
 	  tap(resp => {
 		  this.AuthenticationHandler(resp.email,resp.elocalId,resp.idToken,+resp.expiresIn);
 	  }));
+  }
+
+  logOut(){
+  	this.user.next(null);
+	this.router.navigate(['/auth']);
   }
 
   signUp(email: string, password: string){
@@ -58,10 +65,10 @@ export class AuthService {
 				  errorMessage = "This email already exist!!";
 			  	  break;
 			  case "EMAIL_NOT_FOUND":
-				  errorMessage = "Email not found";
+				  errorMessage = "Wrong credentiasls";
 			  	  break;
 			  case "INVALID_PASSWORD":
-				  errorMessage = "Invalid Password";
+				  errorMessage = "Wrong credentiasls";
 				  break;
 			  case "USER_DISABLED":
 				  errorMessage = "Disabled user";
