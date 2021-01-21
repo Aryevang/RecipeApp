@@ -6,6 +6,7 @@ import { throwError, BehaviorSubject } from 'rxjs';
 import { AuthResponseData } from './AuthResponseData';
 import { User } from '../auth/user.model';
 import {Router} from '@angular/router';
+import {stringify} from '@angular/compiler/src/util';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,8 @@ import {Router} from '@angular/router';
 export class AuthService {
   constructor(private http: HttpClient,
 				  private router: Router) { }
+
+  tokenExpirationTimer: any;
   signUpURL = environment.authSignUpURL;
   user = new BehaviorSubject<User>(null);
 
@@ -30,6 +33,10 @@ export class AuthService {
   logOut(){
   	this.user.next(null);
 	this.router.navigate(['/auth']);
+	localStorage.removeItem("userData");
+	if(this.tokenExpirationTimer){
+		clearTimeout(this.tokenExpirationTimer);
+	}
   }
 
   signUp(email: string, password: string){
@@ -54,6 +61,28 @@ export class AuthService {
 		expiration
 	);
 	this.user.next(user);
+	this.autoLogout(expiresIn * 1000);
+	localStorage.setItem("userData",JSON.stringify(user));
+  }
+
+  autoLogin(){
+  	 const userData:{ email: string, id: string, _token:string, _tokenExpirationDate:string}= JSON.parse(localStorage.getItem("userData"));
+	 if(!userData){
+	 	return;
+	 }
+
+	 const loadedUser = new User( userData.email, userData.id, userData._token, new Date( userData._tokenExpirationDate));
+
+	 if(loadedUser.token){
+	 	this.user.next(loadedUser);
+		this.autoLogout(new Date(userData._tokenExpirationDate).getTime() - new Date().getTime());
+	 }
+  }
+
+  autoLogout(expirationDuration: number){
+	  this.tokenExpirationTimer = setTimeout(()=>{
+	  	this.logOut();
+	  }, expirationDuration);
   }
 
   //Handle pipe logic needed to cath the errors
