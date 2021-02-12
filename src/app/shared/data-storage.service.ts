@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {RecipeService} from '../recipes/recipes.service';
-import { environment } from './../../environments/environment.prod';
+import { environment } from './../../environments/environment';
 import {Recipe} from '../recipes/recipe.model';
 import { map, tap } from 'rxjs/Operators';
 

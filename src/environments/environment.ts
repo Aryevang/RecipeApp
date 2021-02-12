@@ -4,8 +4,16 @@
 
 export const environment = {
   production: false,
-  apiURL: "https://ng-recipe-training-default-rtdb.firebaseio.com/"
+  apiURL: "https://ng-recipe-training-default-rtdb.firebaseio.com/",
+  baseURL:       baseURL(),
+  recipeURL:     baseURL() + 'recipes.json',
+  authSignUpURL: "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyAmVqcZgARNVvNXixi1nmXMB5u89zi1_cQ",
+  authLoginURL:  "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyAmVqcZgARNVvNXixi1nmXMB5u89zi1_cQ"
 };
+
+function baseURL(){
+	return "https://ng-recipe-training-default-rtdb.firebaseio.com/" 
+}
 
 /*
  * For easier debugging in development mode, you can import the following file
